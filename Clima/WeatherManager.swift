@@ -14,16 +14,23 @@ protocol WeatherManagerDelegate {
 }
 
 struct WeatherManager {
-    let weatherURL = "https://api.openweathermap.org/data/2.5/weather?appid=f64fe10e6ec735c8ca03bbb61ee38dda&units=metric"
+    private let weatherURL = "https://api.openweathermap.org/data/2.5/weather?appid=f64fe10e6ec735c8ca03bbb61ee38dda&units=metric"
     
     var delegate: WeatherManagerDelegate?
     
     func fetchWeather(for cityName: String) {
-        let urlString = "\(weatherURL)&q=\(cityName)"
+        print("fetchWeather for cityName: \(cityName)")
+        let urlString = "\(weatherURL)&q=\(cityName.webFormatted)"
         performRequest(with: urlString)
     }
     
-    func performRequest(with urlString: String) {
+    func fetchWeather(lat: Double, lon: Double) {
+        print("fetchWeather for lat: \(lat), lon: \(lon)")
+        let urlString = "\(weatherURL)&lat=\(lat)&lon=\(lon)"
+        performRequest(with: urlString)
+    }
+    
+    private func performRequest(with urlString: String) {
         if let url = URL(string: urlString) {
             let session = URLSession(configuration: .default)
             let task = session.dataTask(with: url) { (data, response, error) in
@@ -42,7 +49,7 @@ struct WeatherManager {
         }
     }
     
-    func parseJSON(from weatherData: Data) -> WeatherModel? {
+    private func parseJSON(from weatherData: Data) -> WeatherModel? {
         let decoder = JSONDecoder()
         do {
             let decodedData = try decoder.decode(WeatherData.self, from: weatherData)
@@ -56,7 +63,7 @@ struct WeatherManager {
         }
     }
     
-    func getConditionName(for weatherId: Int) -> String {
+    private func getConditionName(for weatherId: Int) -> String {
         switch weatherId {
         case 200...232:
             return "cloud.bolt"
@@ -120,5 +127,11 @@ struct WeatherModel {
         default:
             return "cloud"
         }
+    }
+}
+
+extension String {
+    var webFormatted: String {
+        return self.replacingOccurrences(of: " ", with: "%20")
     }
 }
