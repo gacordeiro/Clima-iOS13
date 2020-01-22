@@ -10,7 +10,7 @@ import UIKit
 
 let apiKey = "f64fe10e6ec735c8ca03bbb61ee38dda"
 
-class WeatherViewController: UIViewController, UITextFieldDelegate {
+class WeatherViewController: UIViewController {
 
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
@@ -23,12 +23,21 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         
         searchTextField.delegate = self
+        weatherManager.delegate = self
     }
 
     @IBAction func searchPressed(_ sender: UIButton) {
         search()
     }
     
+    private func search() {
+        searchTextField.endEditing(true)
+    }
+}
+
+//MARK: - UITextFieldDelegate
+
+extension WeatherViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         search()
         return true
@@ -50,9 +59,20 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         }
         searchTextField.text = ""
     }
-    
-    private func search() {
-        searchTextField.endEditing(true)
-    }
 }
 
+//MARK: - WeatherManagerDelegate
+
+extension WeatherViewController: WeatherManagerDelegate {
+    func didUpdateWeather(_ weatherManager: WeatherManager, with model: WeatherModel) {
+        DispatchQueue.main.async {
+            self.conditionImageView.image = UIImage(systemName: model.conditionName)
+            self.temperatureLabel.text = model.temperatureString
+            self.cityLabel.text = model.cityName
+        }
+    }
+    
+    func didFail(with error: Error) {
+        print(error)
+    }
+}
